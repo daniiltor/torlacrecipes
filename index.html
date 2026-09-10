@@ -426,7 +426,10 @@
   .timing-item:first-child { border-left: none; }
   .timing-label { display: block; font-weight: 700; font-size: .62rem; letter-spacing: .1em;
                   text-transform: uppercase; color: var(--ink-mute); margin-bottom: 2px; }
-  .timing-value { font-family: var(--font-display); font-weight: 600; font-size: .96rem; color: var(--ink); }
+  .timing-value {
+    font-family: var(--font-display); font-weight: 600; font-size: .96rem; color: var(--ink);
+    display: block; width: 100%; white-space: nowrap;
+  }
 
   .jump-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 30px; }
   .jump-btn {
@@ -1586,6 +1589,7 @@
       requestAnimationFrame(function () {
         modal.scrollTop = 0;
         onModalScroll();
+        fitTimingValues();
       });
     });
 
@@ -1601,6 +1605,25 @@
   function onModalScroll() {
     var bar = $("modalTopbar");
     if (bar) bar.classList.toggle("scrolled", $("modalBody").scrollTop > 40);
+  }
+
+  // Shrinks any Prep/Cook/Total/Serves value that would otherwise wrap onto a
+  // second line (e.g. "1 Hour, 30 Minutes"), so every box in the row stays a
+  // single, evenly-sized line — no box ends up tall and half-empty just
+  // because its neighbor's text wrapped.
+  function fitTimingValues() {
+    var vals = document.querySelectorAll("#modalBody .timing-value");
+    Array.prototype.forEach.call(vals, function (el) {
+      el.style.fontSize = "";
+      var maxPx = parseFloat(getComputedStyle(el).fontSize);
+      var minPx = maxPx * 0.68;
+      var size = maxPx, guard = 0;
+      while (el.scrollWidth > el.clientWidth + 1 && size > minPx && guard < 14) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+        guard++;
+      }
+    });
   }
 
   function openUI() {
@@ -1756,6 +1779,15 @@
   });
 
   $("modalBody").addEventListener("scroll", onModalScroll, { passive: true });
+
+  (function () {
+    var resizeTimer = null;
+    window.addEventListener("resize", function () {
+      if (!$("modalBackdrop").classList.contains("open")) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(fitTimingValues, 120);
+    });
+  })();
 
   $("modalBackdrop").addEventListener("click", function (e) {
     if (e.target.id === "modalBackdrop") closeRecipe();
