@@ -793,6 +793,7 @@
     <symbol id="i-top" viewBox="0 0 24 24"><polyline points="6 14 12 8 18 14"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.4a4.7 4.7 0 0 1 8.5 2.8c0 5.8-8.5 11.3-8.5 11.3Z"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M15 4.5 19.5 9 8 20.5H3.5V16Z"/><line x1="13" y1="6.5" x2="17.5" y2="11"/></symbol>
   </defs>
 </svg>
 
@@ -971,7 +972,7 @@
       <!-- Success screen -->
       <div class="af-success" id="afSuccess" hidden>
         <div class="af-success-mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></div>
-        <h3>Recipe added <span aria-hidden="true">✓</span></h3>
+        <h3 id="afSuccessHeading">Recipe added <span aria-hidden="true">✓</span></h3>
         <p id="afSuccessMsg">Your recipe was saved to the cookbook.</p>
         <div class="af-actions af-actions-center">
           <button type="button" class="af-btn af-btn-ghost" id="afSuccessClose">Close</button>
@@ -1480,6 +1481,7 @@
           (canWake ? '<button class="icon-btn" id="wakeBtn" type="button" aria-pressed="false" title="Keep the screen awake while cooking"><span class="sr-only">Keep screen on</span>' + icon("i-bulb") + "</button>" : "") +
           '<button class="icon-btn" id="shareBtn" type="button" title="Share this recipe"><span class="sr-only">Share recipe</span>' + icon("i-share") + "</button>" +
           '<button class="icon-btn" id="printBtn" type="button" title="Print this recipe"><span class="sr-only">Print recipe</span>' + icon("i-print") + "</button>" +
+          (APPS_SCRIPT_URL ? '<button class="icon-btn" id="editRecipeBtn" type="button" title="Edit this recipe"><span class="sr-only">Edit recipe</span>' + icon("i-edit") + "</button>" : "") +
         "</div>" +
       "</div>" +
       '<div class="modal-inner">' +
@@ -1551,6 +1553,9 @@
     $("closeBtn").addEventListener("click", closeRecipe);
     $("printBtn").addEventListener("click", function () { window.print(); });
     $("shareBtn").addEventListener("click", function () { shareRecipe(recipe); });
+
+    var editBtn = $("editRecipeBtn");
+    if (editBtn) editBtn.addEventListener("click", function () { afOpenEdit(recipe); });
 
     var wakeBtn = $("wakeBtn");
     if (wakeBtn) wakeBtn.addEventListener("click", function () { toggleWake(wakeBtn); });
@@ -1856,6 +1861,7 @@
   var AF_CUSTOM = "__custom__";
   var afBuilt = false;
   var afLastSlug = null;
+  var afEditingRecipe = null; // set to a recipe object while editing, else null
   var afSheetOptions = null;      // { "Category": [...], "Prep Time": [...], ... } once fetched
   var afSheetOptionsPromise = null;
 
@@ -2094,18 +2100,69 @@
   }
 
   /* ---- open / close ---- */
-  function afResetForm() {
+  function afSetSelectValue(id, value) {
+    var sel = $(id);
+    value = value || "";
+    var hasExact = Array.prototype.some.call(sel.options, function (o) { return o.value === value; });
+    if (hasExact) {
+      sel.value = value;
+      return;
+    }
+    if (!value) { sel.value = ""; return; }
+    // Value doesn't match any current option (e.g. an older free-text entry) —
+    // fall back to the Custom… slot when available so nothing is silently lost.
+    var custom = document.querySelector('.af-custom[data-customfor="' + id + '"]');
+    var hasCustomOpt = Array.prototype.some.call(sel.options, function (o) { return o.value === AF_CUSTOM; });
+    if (custom && hasCustomOpt) {
+      sel.value = AF_CUSTOM;
+      custom.value = value;
+      custom.hidden = false;
+    } else {
+      sel.value = "";
+    }
+  }
+
+  function afResetForm(recipe) {
     afPopulateSelects();
-    ["afTitleInput", "afDescription", "afImage", "afNotes"].forEach(function (id) { $(id).value = ""; });
     document.querySelectorAll(".af-custom").forEach(function (c) { c.value = ""; c.hidden = true; });
     afClearErrors();
     $("afIngSections").innerHTML = "";
     $("afDirSections").innerHTML = "";
-    afAddSection($("afIngSections"), "ing");
-    afAddSection($("afDirSections"), "dir");
+
+    if (recipe) {
+      $("afTitleInput").value = recipe.title || "";
+      $("afDescription").value = recipe.description || "";
+      $("afImage").value = recipe.picture || "";
+      $("afNotes").value = recipe.notes || "";
+      afSetSelectValue("afCategory", recipe.category || "");
+      afSetSelectValue("afPrep", recipe.prepTime || "");
+      afSetSelectValue("afCook", recipe.cookTime || "");
+      afSetSelectValue("afTotal", recipe.totalTime || "");
+      afSetSelectValue("afServes", recipe.serves || "");
+
+      var ingGroups = parseIngredients(recipe.ingredients);
+      var dirGroups = parseDirections(recipe.directions);
+      if (ingGroups.length) {
+        ingGroups.forEach(function (g) { afAddSection($("afIngSections"), "ing", g.title, g.items); });
+      } else {
+        afAddSection($("afIngSections"), "ing");
+      }
+      if (dirGroups.length) {
+        dirGroups.forEach(function (g) { afAddSection($("afDirSections"), "dir", g.title, g.items); });
+      } else {
+        afAddSection($("afDirSections"), "dir");
+      }
+    } else {
+      ["afTitleInput", "afDescription", "afImage", "afNotes"].forEach(function (id) { $(id).value = ""; });
+      afAddSection($("afIngSections"), "ing");
+      afAddSection($("afDirSections"), "dir");
+    }
+
     var save = $("afSave");
     save.disabled = false;
-    save.querySelector(".af-save-label").textContent = "Save recipe";
+    save.querySelector(".af-save-label").textContent = recipe ? "Save changes" : "Save recipe";
+
+    $("afTitle").textContent = recipe ? "Edit recipe" : "Add a recipe";
   }
 
   function afShowStage(stage) { // "lock" | "form" | "success"
@@ -2114,9 +2171,10 @@
     $("afSuccess").hidden = stage !== "success";
   }
 
-  function afOpen() {
+  function afOpenInternal(recipe) {
     if (!afBuilt) { afBuildOnce(); afBuilt = true; }
-    afResetForm();
+    afEditingRecipe = recipe || null;
+    afResetForm(recipe);
     var hasKey = true;
     if (APPS_SCRIPT_URL) {
       try { hasKey = !!localStorage.getItem(UNLOCK_KEY); } catch (e) { hasKey = false; }
@@ -2141,14 +2199,24 @@
     // If the sheet's real option lists (fetched in the background since page
     // load) weren't ready yet, upgrade them in place now — any selection the
     // user already made is preserved.
-    afGetSheetOptions().then(function () { afPopulateSelects(); });
+    afGetSheetOptions().then(function () { afPopulateSelects(); if (afEditingRecipe) {
+      afSetSelectValue("afCategory", afEditingRecipe.category || "");
+      afSetSelectValue("afPrep", afEditingRecipe.prepTime || "");
+      afSetSelectValue("afCook", afEditingRecipe.cookTime || "");
+      afSetSelectValue("afTotal", afEditingRecipe.totalTime || "");
+      afSetSelectValue("afServes", afEditingRecipe.serves || "");
+    } });
   }
+
+  function afOpen() { afOpenInternal(null); }
+  function afOpenEdit(recipe) { afOpenInternal(recipe); }
 
   function afClose() {
     var bd = $("formBackdrop");
     if (!bd.classList.contains("open")) return;
     bd.classList.remove("open");
     document.body.style.overflow = "";
+    afEditingRecipe = null;
     var b = $("addRecipeBtn");
     if (b && b.focus) b.focus();
   }
@@ -2175,11 +2243,16 @@
     if (afCountItems($("afIngSections")) === 0) { afSetError("ingredients", "Please add at least one ingredient.", null); ok = false; firstBad = firstBad || $("afIngSections"); }
     if (afCountItems($("afDirSections")) === 0) { afSetError("directions", "Please add at least one direction step.", null); ok = false; firstBad = firstBad || $("afDirSections"); }
 
-    // duplicate-title guard (slug must be unique)
+    // duplicate-title guard (slug must be unique) — when editing, the recipe
+    // being edited is allowed to keep (or reuse) its own current title/slug
     if (title) {
       var slug = slugify(title);
-      var dup = allRecipes.some(function (r) { return slugify(r.title) === slug; });
-      if (dup) { afSetError("title", "A recipe with this name already exists. Please use a different title.", $("afTitleInput")); ok = false; firstBad = firstBad || $("afTitleInput"); }
+      var ownSlug = afEditingRecipe ? slugify(afEditingRecipe.title) : null;
+      var dup = allRecipes.some(function (r) {
+        if (afEditingRecipe && r === afEditingRecipe) return false;
+        return slugify(r.title) === slug;
+      });
+      if (dup && slug !== ownSlug) { afSetError("title", "A recipe with this name already exists. Please use a different title.", $("afTitleInput")); ok = false; firstBad = firstBad || $("afTitleInput"); }
     }
     if (!ok && firstBad && firstBad.scrollIntoView) firstBad.scrollIntoView({ behavior: "smooth", block: "center" });
     return ok;
@@ -2187,7 +2260,7 @@
 
   /* ---- submit ---- */
   function afBuildPayload() {
-    return {
+    var p = {
       key: (function () { try { return localStorage.getItem(UNLOCK_KEY) || ""; } catch (e) { return ""; } })(),
       "Title": $("afTitleInput").value.trim(),
       "Description": $("afDescription").value.trim(),
@@ -2201,6 +2274,8 @@
       "Directions": afSerializeSections($("afDirSections")),
       "Notes": $("afNotes").value.trim()
     };
+    if (afEditingRecipe) p.originalTitle = afEditingRecipe.title;
+    return p;
   }
 
   function afOptimisticInsert(p) {
@@ -2226,12 +2301,32 @@
     return slugify(recipe.title);
   }
 
+  function afOptimisticUpdate(p, recipe) {
+    recipe.title = p.Title;
+    recipe.category = p.Category || "Uncategorized";
+    recipe.ingredients = p.Ingredients || "";
+    recipe.directions = p.Directions || "";
+    recipe.notes = p.Notes || "";
+    recipe.description = p.Description || "";
+    recipe.picture = safeUrl(p.Pictures);
+    recipe.prepTime = p["Prep Time"] || "";
+    recipe.cookTime = p["Cook Time"] || "";
+    recipe.totalTime = p["Total Time"] || "";
+    recipe.serves = p.Serves || "";
+    buildTabs();
+    render();
+    // don't trust the possibly-stale published CSV cache anymore
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    return slugify(recipe.title);
+  }
+
   function afSubmit() {
     if (!afValidate()) return;
+    var isEdit = !!afEditingRecipe;
     var save = $("afSave");
     var label = save.querySelector(".af-save-label");
     save.disabled = true;
-    label.textContent = "Saving recipe…";
+    label.textContent = isEdit ? "Saving changes…" : "Saving recipe…";
     $("afFormError").hidden = true;
 
     var payload = afBuildPayload();
@@ -2255,14 +2350,23 @@
           throw new Error(data.message || "save-failed");
         }
         // success
-        afLastSlug = afOptimisticInsert(payload);
-        $("afSuccessMsg").textContent = "“" + payload.Title + "” was saved to your Google Sheet. It's showing now — it may take a few minutes to appear for others as Google refreshes the published copy.";
+        if (isEdit) {
+          afLastSlug = afOptimisticUpdate(payload, afEditingRecipe);
+          $("afSuccessHeading").textContent = "Recipe updated ✓";
+          $("afSuccessMsg").textContent = "“" + payload.Title + "” was updated in your Google Sheet. The change is showing now — it may take a few minutes to appear for others as Google refreshes the published copy.";
+          $("afSuccessAnother").hidden = true;
+        } else {
+          afLastSlug = afOptimisticInsert(payload);
+          $("afSuccessHeading").textContent = "Recipe added ✓";
+          $("afSuccessMsg").textContent = "“" + payload.Title + "” was saved to your Google Sheet. It's showing now — it may take a few minutes to appear for others as Google refreshes the published copy.";
+          $("afSuccessAnother").hidden = false;
+        }
         afShowStage("success");
         $("afSuccess").scrollIntoView ? $("afBody").scrollTo(0, 0) : null;
       })
       .catch(function (err) {
         save.disabled = false;
-        label.textContent = "Save recipe";
+        label.textContent = isEdit ? "Save changes" : "Save recipe";
         var box = $("afFormError");
         if (err && err.message === "unauthorized") {
           afShowStage("lock");
