@@ -1002,7 +1002,7 @@
   // their own. A "Custom…" entry in each time/serves dropdown means you are never
   // blocked from typing something new.
   var TIME_OPTIONS_DEFAULT = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes", "40 minutes", "45 minutes", "50 minutes", "1 hour", "1 hour 15 minutes", "1 hour 30 minutes", "2 hours", "2 hours 30 minutes", "3 hours"];
-  var SERVES_OPTIONS_DEFAULT = ["1", "2", "3", "4", "5", "6", "8", "10", "12"];
+  var SERVES_OPTIONS_DEFAULT = ["1", "2", "3", "4", "5", "6", "7", "8"];
   var UNLOCK_KEY = "mfr.addkey.v1"; // remembers your passphrase on this device
   // ---------------------------------------------------------------------------
 
@@ -1824,6 +1824,31 @@
   var AF_CUSTOM = "__custom__";
   var afBuilt = false;
   var afLastSlug = null;
+  var afSheetOptions = null;      // { "Category": [...], "Prep Time": [...], ... } once fetched
+  var afSheetOptionsPromise = null;
+
+  // Reads the EXACT dropdown lists already configured on the sheet's Category /
+  // Prep Time / Cook Time / Total Time / Serves columns (Data > Data validation),
+  // so the form only ever offers values the sheet will accept. Falls back to
+  // deriving options from existing recipe data (see afCategoryOptions etc.) if
+  // the request fails or the deployed Apps Script doesn't support this yet.
+  function afGetSheetOptions(timeoutMs) {
+    if (afSheetOptions) return Promise.resolve(afSheetOptions);
+    if (!APPS_SCRIPT_URL) return Promise.resolve(null);
+    if (!afSheetOptionsPromise) {
+      afSheetOptionsPromise = fetch(APPS_SCRIPT_URL, { method: "GET" })
+        .then(function (res) { return res.text(); })
+        .then(function (text) {
+          var data;
+          try { data = JSON.parse(text); } catch (e) { data = null; }
+          if (data && data.ok && data.options) afSheetOptions = data.options;
+          return afSheetOptions;
+        })
+        .catch(function () { return null; });
+    }
+    var timeoutP = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, timeoutMs || 4000); });
+    return Promise.race([afSheetOptionsPromise, timeoutP]);
+  }
 
   function afUniq(list) {
     var seen = {}, out = [];
@@ -1883,18 +1908,39 @@
 
   function afFillSelect(sel, options, cfg) {
     cfg = cfg || {};
+    var prevValue = sel.value;
     sel.innerHTML = "";
     sel.appendChild(afOption("", cfg.placeholder || "— optional —"));
     options.forEach(function (v) { sel.appendChild(afOption(v, v)); });
     if (cfg.custom) sel.appendChild(afOption(AF_CUSTOM, "Custom…"));
+    // Re-populating (e.g. once the sheet's real option list arrives) should never
+    // silently discard a choice the user already made.
+    var hasPrev = Array.prototype.some.call(sel.options, function (o) { return o.value === prevValue; });
+    sel.value = hasPrev ? prevValue : "";
   }
 
   function afPopulateSelects() {
-    afFillSelect($("afCategory"), afCategoryOptions(), { placeholder: "Choose a category…" });
-    afFillSelect($("afPrep"), afTimeOptions(["prepTime"]), { placeholder: "— optional —", custom: true });
-    afFillSelect($("afCook"), afTimeOptions(["cookTime"]), { placeholder: "— optional —", custom: true });
-    afFillSelect($("afTotal"), afTimeOptions(["totalTime", "prepTime", "cookTime"]), { placeholder: "Auto (prep + cook)", custom: true });
-    afFillSelect($("afServes"), afServesOptions(), { placeholder: "— optional —", custom: true });
+    // Prefer the sheet's OWN dropdown lists (exact wording/casing) when available —
+    // that guarantees every value the form offers is one the sheet will accept.
+    // Only fall back to guessed/derived options (with a free-text "Custom…") for a
+    // field the sheet has no fixed dropdown list for, or before the Apps Script
+    // has been redeployed with the options endpoint.
+    var sheetOpts = afSheetOptions || {};
+
+    var catList = sheetOpts["Category"];
+    afFillSelect($("afCategory"), catList || afCategoryOptions(), { placeholder: "Choose a category…", custom: false });
+
+    var prepList = sheetOpts["Prep Time"];
+    afFillSelect($("afPrep"), prepList || afTimeOptions(["prepTime"]), { placeholder: "— optional —", custom: !prepList });
+
+    var cookList = sheetOpts["Cook Time"];
+    afFillSelect($("afCook"), cookList || afTimeOptions(["cookTime"]), { placeholder: "— optional —", custom: !cookList });
+
+    var totalList = sheetOpts["Total Time"];
+    afFillSelect($("afTotal"), totalList || afTimeOptions(["totalTime", "prepTime", "cookTime"]), { placeholder: "Auto (prep + cook)", custom: !totalList });
+
+    var servesList = sheetOpts["Serves"];
+    afFillSelect($("afServes"), servesList || afServesOptions(), { placeholder: "— optional —", custom: !servesList });
   }
 
   function afSelectValue(id) {
@@ -2058,6 +2104,12 @@
       var f = APPS_SCRIPT_URL && !hasKey ? $("afKey") : $("afTitleInput");
       if (f) f.focus();
     }, 30);
+
+    // The dropdowns above were populated from whatever was already available.
+    // If the sheet's real option lists (fetched in the background since page
+    // load) weren't ready yet, upgrade them in place now — any selection the
+    // user already made is preserved.
+    afGetSheetOptions().then(function () { afPopulateSelects(); });
   }
 
   function afClose() {
@@ -2188,7 +2240,14 @@
           $("afKey").focus();
           return;
         }
-        box.textContent = "Unable to save recipe. Please check your connection and try again.";
+        // Surface the server's own message when it gave us one (e.g. a duplicate
+        // title, or a value that doesn't match the sheet's dropdown list) —
+        // only fall back to a generic message for an actual connectivity/parsing failure.
+        var GENERIC_ERRORS = { "bad-response": 1, "save-failed": 1 };
+        var msg = (err && err.message && !GENERIC_ERRORS[err.message])
+          ? err.message
+          : "Unable to save recipe. Please check your connection and try again.";
+        box.textContent = msg;
         box.hidden = false;
         box.scrollIntoView ? box.scrollIntoView({ behavior: "smooth", block: "center" }) : null;
       });
@@ -2249,6 +2308,9 @@
   var addBtn = $("addRecipeBtn");
   if (APPS_SCRIPT_URL) {
     addBtn.addEventListener("click", afOpen);
+    // Warm the sheet's dropdown-option lists in the background so they're
+    // usually already available by the time someone opens the form.
+    afGetSheetOptions();
   } else if (ADD_RECIPE_FORM_URL) {
     addBtn.addEventListener("click", function () { window.open(ADD_RECIPE_FORM_URL, "_blank", "noopener"); });
   } else {
