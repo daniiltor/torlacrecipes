@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>My Family Recipes</title>
 <meta name="description" content="The Torlac family cookbook — breakfasts, mains, soups, sides, snacks and desserts, all in one place and easy to cook from.">
-<meta name="theme-color" content="#F3EBDF">
+<meta name="theme-color" content="#F5F8F4">
 <link rel="canonical" href="https://daniiltor.github.io/agnessas-recipes/">
 <meta property="og:site_name" content="My Family Recipes">
 <meta property="og:title" content="My Family Recipes">
@@ -15,26 +15,28 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="My Family Recipes">
 <meta name="twitter:description" content="The Torlac family cookbook — breakfasts, mains, soups, sides, snacks and desserts, all in one place and easy to cook from.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23A9713F'/%3E%3Ctext x='50' y='70' font-size='60' font-family='Georgia,serif' font-style='italic' fill='%23FFF6E8' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23A9713F'/%3E%3Ctext x='50' y='70' font-size='60' font-family='Georgia,serif' font-style='italic' fill='%23FFF6E8' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231B5E59'/%3E%3Ctext x='50' y='70' font-size='60' font-family='Georgia,serif' font-style='italic' fill='%23FFF6E8' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231B5E59'/%3E%3Ctext x='50' y='70' font-size='60' font-family='Georgia,serif' font-style='italic' fill='%23FFF6E8' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://docs.google.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper:      #F3EBDF;
-    --paper-deep: #E9DFCC;
+    --paper:      #F5F8F4;
+    --paper-deep: #E4ECE5;
     --surface:    #FFFFFF;
-    --ink:        #1F1C18;
-    --ink-soft:   #574F42;
-    --ink-mute:   #665E4F;
-    --line:       #E2D7C3;
-    --line-soft:  #EFE7D9;
-    --accent:     #A9713F;
-    --accent-dark:#7C5230;
-    --accent-tint:#F6EADC;
-    --green:      #33553C;
+    --ink:        #1E2622;
+    --ink-soft:   #44504A;
+    --ink-mute:   #55625B;
+    --line:       #D3DFD5;
+    --line-soft:  #E5EDE6;
+    --accent:     #2E8B7F;
+    --accent-dark:#1B5E59;
+    --accent-tint:#E2F1EC;
+    --green:      #2F6B47;
+    --saffron:    #E9AE2F;
+    --saffron-tint:#FFF5D9;
 
     --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
     --font-ui: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -155,7 +157,7 @@
   }
   .search-box input::placeholder { color: var(--ink-mute); }
   .search-box input:hover { border-color: var(--accent); }
-  .search-box input:focus { border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(169,113,63,.16); outline: none; }
+  .search-box input:focus { border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(27,94,89,.18); outline: none; }
 
   .search-clear {
     position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
@@ -178,7 +180,12 @@
   }
   .tab-btn .tab-count { font-size: .78rem; font-weight: 700; color: var(--ink-mute); font-variant-numeric: tabular-nums; }
   .tab-btn:hover { background: var(--paper-deep); color: var(--ink); }
-  .tab-btn[aria-pressed="true"] { background: var(--accent-dark); color: #fff; }
+  .tab-btn[aria-pressed="true"] { background: var(--cat, var(--accent-dark)); color: #fff; }
+  .tab-btn[style] > span:first-child::before {
+    content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--cat); margin-right: 9px; vertical-align: 1px;
+  }
+  .tab-btn[style][aria-pressed="true"] > span:first-child::before { background: #fff; }
   .tab-btn[aria-pressed="true"] .tab-count { color: rgba(255,255,255,.75); }
 
   .sidebar-note {
@@ -221,13 +228,14 @@
   .card-link {
     display: flex; flex-direction: column; height: 100%;
     background: var(--surface); border: 1px solid var(--line);
+    border-top: 4px solid var(--cat, var(--line));
     border-radius: var(--r-lg); overflow: hidden;
     text-decoration: none; color: inherit;
     box-shadow: var(--shadow-1);
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   }
-  .card-link:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: var(--accent); }
-  .card-link:hover .card-title { color: var(--accent-dark); }
+  .card-link:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: var(--cat, var(--accent)); }
+  .card-link:hover .card-title { color: var(--cat, var(--accent-dark)); }
   .card-link:active { transform: translateY(-1px); }
   @media (prefers-reduced-motion: reduce) { .card-link, .card-link:hover { transform: none; } }
 
@@ -259,19 +267,22 @@
   .card-image {
     position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden;
     background: linear-gradient(140deg, var(--paper-deep), var(--line));
+    background: linear-gradient(140deg,
+      color-mix(in srgb, var(--cat, var(--accent)) 10%, #fff),
+      color-mix(in srgb, var(--cat, var(--accent)) 26%, #fff));
     display: flex; align-items: center; justify-content: center;
   }
   .card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .placeholder-mark {
     font-family: var(--font-display); font-style: italic; font-weight: 500;
-    font-size: 2.8rem; color: var(--accent); opacity: .5;
+    font-size: 2.8rem; color: var(--cat, var(--accent)); opacity: .6;
   }
 
   .card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 
   .eyebrow {
     font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--green);
+    color: var(--cat, var(--green));
   }
 
   .card-title {
@@ -286,7 +297,7 @@
     display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
   }
   .card-meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .card-meta .icon { width: 14px; height: 14px; color: var(--accent); }
+  .card-meta .icon { width: 14px; height: 14px; color: var(--cat, var(--accent)); }
 
   /* ---------- States ---------- */
   .skeleton-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
@@ -352,7 +363,7 @@
   /* ---------- Recipe view ---------- */
   .modal-backdrop {
     display: none; position: fixed; inset: 0;
-    background: rgba(31,28,24,.5); z-index: 60;
+    background: rgba(24,32,28,.5); z-index: 60;
     align-items: flex-start; justify-content: center;
     padding: 40px 20px; overflow: hidden;
   }
@@ -374,7 +385,7 @@
     position: sticky; top: 0; z-index: 6;
     display: flex; align-items: center; gap: 12px;
     padding: 10px clamp(14px, 3vw, 22px);
-    background: rgba(243,235,223,.94);
+    background: rgba(245,248,244,.94);
     -webkit-backdrop-filter: saturate(180%) blur(10px);
     backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid transparent;
@@ -451,11 +462,11 @@
   }
   .section-heading .heading-hint { font-family: var(--font-ui); font-size: .74rem; font-weight: 600;
     letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); }
-  .section-rule { height: 2px; background: var(--accent); width: 44px; margin: 0 0 18px; border-radius: 2px; }
+  .section-rule { height: 3px; background: var(--cat, var(--accent)); width: 44px; margin: 0 0 18px; border-radius: 2px; }
 
   .group-title {
     font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--accent-dark); margin: 24px 0 8px;
+    color: var(--cat, var(--accent-dark)); margin: 24px 0 8px;
   }
   .group-title:first-child { margin-top: 0; }
 
@@ -476,12 +487,12 @@
   .check-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .check-box {
     flex: 0 0 auto; width: 21px; height: 21px; margin-top: 2px;
-    border: 1.8px solid var(--accent); border-radius: 5px; background: var(--surface);
+    border: 1.8px solid var(--cat, var(--accent)); border-radius: 5px; background: var(--surface);
     display: flex; align-items: center; justify-content: center;
     transition: background .14s ease, border-color .14s ease;
   }
   .check-box .icon { width: 13px; height: 13px; color: #fff; opacity: 0; stroke-width: 3; }
-  .check-row input:checked + .check-box { background: var(--accent); }
+  .check-row input:checked + .check-box { background: var(--cat, var(--accent)); }
   .check-row input:checked + .check-box .icon { opacity: 1; }
   .check-row input:focus-visible + .check-box { outline: 2.5px solid var(--accent-dark); outline-offset: 2px; }
   .check-text { font-size: 1rem; line-height: 1.5; color: var(--ink); transition: color .14s ease; }
@@ -499,7 +510,7 @@
   .step-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .step-num {
     flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
-    background: var(--accent-dark); color: #fff;
+    background: var(--cat, var(--accent-dark)); color: #fff;
     font-family: var(--font-display); font-weight: 600; font-size: .95rem;
     display: flex; align-items: center; justify-content: center;
     transition: background .14s ease;
@@ -511,8 +522,8 @@
   .step-row input:checked ~ .step-text { color: var(--ink-mute); }
 
   .notes-card {
-    background: var(--accent-tint); border: 1px solid var(--line);
-    border-left: 4px solid var(--accent); border-radius: var(--r-md);
+    background: var(--saffron-tint); border: 1px solid #F0DFAE;
+    border-left: 4px solid var(--saffron); border-radius: var(--r-md);
     padding: 16px 20px;
   }
   .notes-card p { margin: 0; font-size: .98rem; line-height: 1.6; color: var(--ink); }
@@ -553,7 +564,7 @@
     .sidebar {
       position: sticky; top: 0; z-index: 30; gap: 12px; min-width: 0; max-width: 100vw;
       margin: 0 calc(var(--space-page) * -1); padding: 12px var(--space-page) 10px;
-      background: rgba(243,235,223,.95);
+      background: rgba(245,248,244,.95);
       -webkit-backdrop-filter: saturate(180%) blur(10px);
       backdrop-filter: saturate(180%) blur(10px);
       border-bottom: 1px solid transparent; transition: border-color .2s ease;
@@ -572,7 +583,7 @@
       border: 1.5px solid var(--line); background: var(--surface);
       border-radius: var(--r-pill); padding: 8px 15px; min-height: 40px; font-size: .9rem;
     }
-    .tab-btn[aria-pressed="true"] { border-color: var(--accent-dark); }
+    .tab-btn[aria-pressed="true"] { border-color: var(--cat, var(--accent-dark)); }
     .sidebar-note { display: none; }
     .results-bar { margin-top: 4px; }
   }
@@ -597,6 +608,15 @@
     .nav-btn.next { text-align: left; }
     .footer-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
   }
+
+  /* ---------- Colour stripe ---------- */
+  body::before {
+    content: ""; display: block; height: 6px;
+    background: linear-gradient(90deg,
+      #E9AE2F 0 12.5%, #D9503F 12.5% 25%, #2A8F87 25% 37.5%, #5B9A3F 37.5% 50%,
+      #9A5BAE 50% 62.5%, #E07B24 62.5% 75%, #D9548C 75% 87.5%, #3F85C7 87.5% 100%);
+  }
+  @media print { body::before { display: none; } }
 
   /* ---------- Print ---------- */
   @media print {
@@ -661,10 +681,10 @@
     padding: 11px 13px; min-height: 46px;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .af-input::placeholder { color: #b3a892; }
+  .af-input::placeholder { color: #7F8C84; }
   .af-input:focus {
     outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(169,113,63,.16);
+    box-shadow: 0 0 0 3px rgba(27,94,89,.18);
   }
   .af-textarea { min-height: 64px; resize: vertical; line-height: 1.5; }
   .af-select {
@@ -1011,6 +1031,13 @@
   // ---------------------------------------------------------------------------
 
   var CATEGORY_ORDER = ["Breakfast", "Main", "Soups", "Sides", "Appetizers", "Snacks", "Dessert", "Drinks"];
+  var CATEGORY_COLORS = {
+    Breakfast: "#9A5F00", Main: "#B3392B", Soups: "#1B6B66", Sides: "#3F7A2E",
+    Appetizers: "#7A3E8E", Snacks: "#A9500D", Dessert: "#B83A74", Drinks: "#2A6AA8"
+  };
+  function catStyle(c) {
+    return CATEGORY_COLORS.hasOwnProperty(c) ? ' style="--cat:' + CATEGORY_COLORS[c] + '"' : "";
+  }
   var CACHE_KEY = "mfr.csv.v1";
   var FAV_KEY = "mfr.favourites.v1";
   var FAV_LABEL = "Favorites";
@@ -1314,7 +1341,7 @@
     var el = $("tabs");
     el.innerHTML = tabs.map(function (t) {
       var on = t === activeCategory;
-      return '<button class="tab-btn" type="button" data-cat="' + esc(t) + '" aria-pressed="' + on + '">' +
+      return '<button class="tab-btn" type="button" data-cat="' + esc(t) + '"' + catStyle(t) + ' aria-pressed="' + on + '">' +
              "<span>" + esc(t) + '</span><span class="tab-count">' + countIn(t) + "</span></button>";
     }).join("");
     Array.prototype.forEach.call(el.querySelectorAll(".tab-btn"), function (btn) {
@@ -1404,7 +1431,7 @@
       if (tt) meta.push("<span>" + icon("i-clock") + esc(tt) + "</span>");
       if (r.serves) meta.push("<span>" + icon("i-serves") + "Serves " + esc(r.serves) + "</span>");
       html +=
-        '<div class="card">' + favButton(slug) +
+        '<div class="card"' + catStyle(r.category) + '>' + favButton(slug) +
           '<a class="card-link" href="#recipe-' + esc(slug) + '" data-slug="' + esc(slug) + '">' +
           '<div class="card-image">' +
             (r.picture
@@ -1484,7 +1511,7 @@
           (APPS_SCRIPT_URL ? '<button class="icon-btn" id="editRecipeBtn" type="button" title="Edit this recipe"><span class="sr-only">Edit recipe</span>' + icon("i-edit") + "</button>" : "") +
         "</div>" +
       "</div>" +
-      '<div class="modal-inner">' +
+      '<div class="modal-inner"' + catStyle(recipe.category) + '>' +
         '<span class="eyebrow">' + esc(recipe.category) + "</span>" +
         '<h2 class="recipe-title" id="modalTitle">' + esc(recipe.title) + "</h2>" +
         (recipe.description ? '<p class="recipe-description">' + esc(recipe.description) + "</p>" : "") +
