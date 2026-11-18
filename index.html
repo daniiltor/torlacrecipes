@@ -576,6 +576,7 @@
       overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
       margin: 0 calc(var(--space-page) * -1); padding: 0 var(--space-page) 2px;
       scroll-snap-type: x proximity;
+      scroll-padding: 0 var(--space-page);
     }
     .tabs::-webkit-scrollbar { display: none; }
     .tab-btn {
@@ -609,15 +610,6 @@
     .footer-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
   }
 
-  /* ---------- Colour stripe ---------- */
-  body::before {
-    content: ""; display: block; height: 6px;
-    background: linear-gradient(90deg,
-      #E9AE2F 0 12.5%, #D9503F 12.5% 25%, #2A8F87 25% 37.5%, #5B9A3F 37.5% 50%,
-      #9A5BAE 50% 62.5%, #E07B24 62.5% 75%, #D9548C 75% 87.5%, #3F85C7 87.5% 100%);
-  }
-  @media print { body::before { display: none; } }
-
   /* ---------- Print ---------- */
   @media print {
     @page { margin: 14mm; }
@@ -647,6 +639,9 @@
     max-width: 640px; width: 100%;
     display: flex; flex-direction: column;
     max-height: min(92vh, 900px); padding: 0; overflow: hidden;
+  }
+  @media (max-width: 620px) {
+    .af-modal { max-height: 100dvh; border-radius: 0; }
   }
   .af-topbar {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
@@ -789,6 +784,80 @@
     .af-actions .af-btn { flex: 1 1 auto; }
     .af-title { font-size: 1.3rem; }
   }
+
+  /* ---------- Photos: ingredient gallery + lightbox ---------- */
+  .ing-photos {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px; margin: 0 0 20px;
+  }
+  .ing-photos:empty { display: none; }
+  .ing-photo {
+    display: block; padding: 0; margin: 0; width: 100%; aspect-ratio: 4 / 3;
+    border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden;
+    background: var(--paper-deep); cursor: zoom-in;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .ing-photo:hover { border-color: var(--cat, var(--accent)); box-shadow: var(--shadow-1); }
+  .ing-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .lightbox {
+    position: fixed; inset: 0; z-index: 120; display: none;
+    align-items: center; justify-content: center;
+    padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    background: rgba(14, 22, 18, .9);
+  }
+  .lightbox.open { display: flex; animation: fadeIn .16s ease; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--r-sm); }
+  .lightbox-btn {
+    position: absolute; width: 46px; height: 46px; border-radius: 50%;
+    border: none; background: rgba(255,255,255,.94); color: var(--ink);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 1.25rem; box-shadow: var(--shadow-2);
+  }
+  .lightbox-btn:hover { background: #fff; }
+  .lightbox-btn:focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+  .lightbox-close { top: max(14px, env(safe-area-inset-top)); right: 14px; }
+  .lightbox-prev { left: 12px; top: 50%; margin-top: -23px; }
+  .lightbox-next { right: 12px; top: 50%; margin-top: -23px; }
+  .lightbox-next .icon { transform: scaleX(-1); }
+  .lightbox-count {
+    position: absolute; bottom: max(14px, env(safe-area-inset-bottom)); left: 0; right: 0;
+    margin: 0; text-align: center; color: #fff; font-size: .85rem; font-weight: 600;
+  }
+  .lightbox [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .lightbox.open { animation: none; } }
+  @media print { .ing-photos, .lightbox { display: none !important; } }
+
+  /* ---------- Photos: add-a-recipe pickers ---------- */
+  .af-photo-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px; }
+  .af-upload-btn {
+    position: relative; display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 10px 18px; border-radius: var(--r-pill);
+    border: 1.5px dashed var(--accent); background: var(--accent-tint);
+    color: var(--accent-dark); font-family: var(--font-ui); font-weight: 700; font-size: .92rem;
+    cursor: pointer; transition: background .15s ease;
+  }
+  .af-upload-btn:hover { background: #D3EAE3; }
+  .af-upload-btn:focus-within { outline: 2.5px solid var(--accent-dark); outline-offset: 2px; }
+  .af-upload-btn .icon { width: 16px; height: 16px; }
+  .af-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 10px; }
+  .af-thumb {
+    position: relative; width: 92px; height: 92px; border-radius: var(--r-md);
+    overflow: hidden; border: 1px solid var(--line); background: var(--paper-deep); flex: 0 0 auto;
+  }
+  .af-thumb-lg { width: 132px; height: 100px; }
+  .af-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .af-thumb button {
+    position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; padding: 0;
+    border-radius: 50%; border: none; cursor: pointer; color: #fff;
+    background: rgba(20, 28, 24, .78); display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .af-thumb button:hover { background: rgba(20, 28, 24, .95); }
+  .af-thumb[hidden], .af-thumbs[hidden], .af-upload-btn[hidden] { display: none !important; }
+  /* keeps the section name box from pushing "Remove section" off narrow screens */
+  .af-section-name { min-width: 0; }
+  .af-section-remove { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -882,6 +951,15 @@
   <article class="modal" id="modalBody" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"></article>
 </div>
 
+<!-- ============ Photo lightbox ============ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button type="button" class="lightbox-btn lightbox-close" id="lightboxClose" aria-label="Close photo"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+  <button type="button" class="lightbox-btn lightbox-prev" id="lightboxPrev" aria-label="Previous photo"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></button>
+  <img id="lightboxImg" alt="Ingredient photo" referrerpolicy="no-referrer">
+  <button type="button" class="lightbox-btn lightbox-next" id="lightboxNext" aria-label="Next photo"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></button>
+  <p class="lightbox-count" id="lightboxCount" aria-live="polite"></p>
+</div>
+
 <!-- ============ Add-a-recipe modal ============ -->
 <div class="modal-backdrop af-backdrop" id="formBackdrop">
   <article class="modal af-modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="afTitle" tabindex="-1">
@@ -950,11 +1028,24 @@
         </div>
         <p class="af-hint">Leave Total time on “Auto” and the site will add prep + cook for you.</p>
 
-        <label class="af-field">
-          <span class="af-label">Recipe image URL</span>
-          <input type="url" id="afImage" class="af-input" autocomplete="off" placeholder="https://… (optional)">
-          <span class="af-hint">Paste a link to a photo. Leave blank to use the site's placeholder.</span>
-        </label>
+        <div class="af-field">
+          <span class="af-label">Recipe photo</span>
+          <span class="af-hint">Optional. Take a picture or choose one from your device. Without a photo the site shows a colored placeholder.</span>
+          <div class="af-photo-row">
+            <div class="af-thumb af-thumb-lg" id="afPhotoPreview" hidden>
+              <img alt="Recipe photo preview" referrerpolicy="no-referrer">
+              <button type="button" id="afPhotoRemove" aria-label="Remove recipe photo"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+            </div>
+            <label class="af-upload-btn">
+              <input type="file" id="afPhotoFile" accept="image/*" class="sr-only">
+              <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+              <span id="afPhotoBtnLabel">Choose photo</span>
+            </label>
+          </div>
+          <label class="af-hint" for="afImage">Or paste a link to a photo</label>
+          <input type="url" id="afImage" class="af-input" autocomplete="off" placeholder="https://…">
+          <span class="af-err" data-err="photo" hidden></span>
+        </div>
 
         <!-- Ingredients -->
         <div class="af-field">
@@ -963,6 +1054,19 @@
           <div id="afIngSections" class="af-sections"></div>
           <button type="button" class="af-add-line" id="afAddIngSection">+ Add ingredient section</button>
           <span class="af-err" data-err="ingredients" hidden></span>
+        </div>
+
+        <!-- Ingredient photos -->
+        <div class="af-field">
+          <span class="af-label">Ingredient photos</span>
+          <span class="af-hint">Optional. Add up to 4 pictures of the ingredients. They show in the Ingredients section of the recipe.</span>
+          <div class="af-thumbs" id="afIngPhotos" hidden></div>
+          <label class="af-upload-btn" id="afIngPhotoBtn">
+            <input type="file" id="afIngPhotoFile" accept="image/*" multiple class="sr-only">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span>Add photos</span>
+          </label>
+          <span class="af-err" data-err="ingphotos" hidden></span>
         </div>
 
         <!-- Directions -->
@@ -1126,6 +1230,17 @@
     return /^https?:\/\//i.test(u || "") ? u : "";
   }
 
+  // A sheet cell can hold several photo links (one per line, or comma separated).
+  function splitUrls(v) {
+    return String(v || "").split(/[\s,]+/).map(safeUrl).filter(Boolean);
+  }
+
+  // Photos uploaded through the form live on Google Drive, which can serve a
+  // smaller copy. Use that for thumbnails so the page stays quick.
+  function sizeUrl(u, w) {
+    return String(u || "").replace(/^(https:\/\/drive\.google\.com\/thumbnail\?.*[?&]sz=)w\d+/, "$1w" + w);
+  }
+
   function slugify(s) {
     return String(s || "").toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -1252,6 +1367,7 @@
         notes: pick(row, "Notes"),
         description: pick(row, "Description", "Summary"),
         picture: safeUrl(pick(row, "Pictures", "Picture", "Photo", "Image")),
+        ingredientPictures: splitUrls(pick(row, "Ingredient Pictures", "Ingredient Photos", "Ingredient Images")),
         prepTime: pick(row, "Prep Time", "PrepTime", "Prep"),
         cookTime: pick(row, "Cook Time", "CookTime", "Cook"),
         totalTime: pick(row, "Total Time", "TotalTime", "Total"),
@@ -1435,7 +1551,7 @@
           '<a class="card-link" href="#recipe-' + esc(slug) + '" data-slug="' + esc(slug) + '">' +
           '<div class="card-image">' +
             (r.picture
-              ? '<img src="' + esc(r.picture) + '" alt="" ' +
+              ? '<img src="' + esc(sizeUrl(r.picture, 640)) + '" alt="" ' +
                 (i < 3 ? 'fetchpriority="high"' : 'loading="lazy"') +
                 ' decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=\'' +
                 '<span class=&quot;placeholder-mark&quot;>' + esc((r.title.charAt(0) || "?").toUpperCase()) + "</span>'\">"
@@ -1531,6 +1647,14 @@
               '<h3 class="section-heading" id="h-ingredients">Ingredients' +
               '<span class="heading-hint">' + totalIngredients + " item" + (totalIngredients === 1 ? "" : "s") + "</span></h3>" +
               '<div class="section-rule"></div>' +
+              (recipe.ingredientPictures && recipe.ingredientPictures.length
+                ? '<div class="ing-photos">' + recipe.ingredientPictures.map(function (u, i) {
+                    return '<button type="button" class="ing-photo" data-full="' + esc(u) + '" aria-label="View ingredient photo ' + (i + 1) +
+                      " of " + recipe.ingredientPictures.length + '">' +
+                      '<img src="' + esc(sizeUrl(u, 480)) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+                      'onerror="this.closest(\'.ing-photo\').remove()"></button>';
+                  }).join("") + "</div>"
+                : "") +
               ingredients.map(function (g) {
                 return (g.title ? '<h4 class="group-title">' + esc(g.title) + "</h4>" : "") +
                   '<ul class="ingredient-list' + (totalIngredients > 3 ? " two-col" : "") + '">' + g.items.map(function (item) {
@@ -1578,6 +1702,13 @@
     var modal = $("modalBody");
 
     $("closeBtn").addEventListener("click", closeRecipe);
+
+    Array.prototype.forEach.call(modal.querySelectorAll(".ing-photo"), function (btn) {
+      btn.addEventListener("click", function () {
+        var all = Array.prototype.slice.call(modal.querySelectorAll(".ing-photo"));
+        openLightbox(all.map(function (b) { return b.getAttribute("data-full"); }), all.indexOf(btn), btn);
+      });
+    });
     $("printBtn").addEventListener("click", function () { window.print(); });
     $("shareBtn").addEventListener("click", function () { shareRecipe(recipe); });
 
@@ -1824,6 +1955,57 @@
   $("modalBackdrop").addEventListener("click", function (e) {
     if (e.target.id === "modalBackdrop") closeRecipe();
   });
+
+  /* ---------------- Photo lightbox ---------------- */
+  var lbList = [], lbIndex = 0, lbTrigger = null;
+
+  function lbShow() {
+    $("lightboxImg").src = lbList[lbIndex];
+    $("lightboxCount").textContent = lbList.length > 1 ? (lbIndex + 1) + " of " + lbList.length : "";
+    $("lightboxPrev").hidden = lbList.length < 2;
+    $("lightboxNext").hidden = lbList.length < 2;
+  }
+
+  function openLightbox(list, index, trigger) {
+    if (!list || !list.length) return;
+    lbList = list; lbIndex = Math.max(0, index || 0); lbTrigger = trigger || null;
+    lbShow();
+    $("lightbox").classList.add("open");
+    $("lightboxClose").focus();
+  }
+
+  function closeLightbox() {
+    $("lightbox").classList.remove("open");
+    $("lightboxImg").removeAttribute("src");
+    if (lbTrigger && document.body.contains(lbTrigger)) lbTrigger.focus();
+    lbTrigger = null;
+  }
+
+  function lbStep(d) {
+    if (lbList.length < 2) return;
+    lbIndex = (lbIndex + d + lbList.length) % lbList.length;
+    lbShow();
+  }
+
+  $("lightboxClose").addEventListener("click", closeLightbox);
+  $("lightboxPrev").addEventListener("click", function () { lbStep(-1); });
+  $("lightboxNext").addEventListener("click", function () { lbStep(1); });
+  $("lightbox").addEventListener("click", function (e) { if (e.target.id === "lightbox") closeLightbox(); });
+  $("lightboxImg").addEventListener("error", function () { if ($("lightbox").classList.contains("open")) closeLightbox(); });
+
+  // Capture phase so the lightbox handles its keys before the recipe window does.
+  document.addEventListener("keydown", function (e) {
+    if (!$("lightbox").classList.contains("open")) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeLightbox(); return; }
+    if (e.key === "ArrowRight") { e.preventDefault(); e.stopPropagation(); lbStep(1); return; }
+    if (e.key === "ArrowLeft") { e.preventDefault(); e.stopPropagation(); lbStep(-1); return; }
+    if (e.key === "Tab") {
+      e.preventDefault(); e.stopPropagation();
+      var btns = ["lightboxPrev", "lightboxNext", "lightboxClose"].map($).filter(function (b) { return !b.hidden; });
+      var at = btns.indexOf(document.activeElement);
+      btns[(at + (e.shiftKey ? -1 : 1) + btns.length) % btns.length].focus();
+    }
+  }, true);
 
   window.addEventListener("popstate", syncFromLocation);
 
@@ -2156,6 +2338,9 @@
     $("afIngSections").innerHTML = "";
     $("afDirSections").innerHTML = "";
 
+    afPhotoNew = null;
+    afIngPhotos = (recipe && recipe.ingredientPictures ? recipe.ingredientPictures : []).map(function (u) { return { url: u }; });
+
     if (recipe) {
       $("afTitleInput").value = recipe.title || "";
       $("afDescription").value = recipe.description || "";
@@ -2184,6 +2369,9 @@
       afAddSection($("afIngSections"), "ing");
       afAddSection($("afDirSections"), "dir");
     }
+
+    afRenderPhoto();
+    afRenderIngPhotos();
 
     var save = $("afSave");
     save.disabled = false;
@@ -2285,6 +2473,102 @@
     return ok;
   }
 
+  /* ---- photos ---- */
+  var AF_MAX_ING_PHOTOS = 4;
+  var afPhotoNew = null;   // a newly chosen recipe photo: { data, mime, name, preview }
+  var afIngPhotos = [];    // ingredient photos: { url } (already saved) or { data, mime, name, preview } (new)
+
+  // Shrinks a picked photo in the browser so uploads stay small and quick.
+  function afReadImage(file, maxDim, quality) {
+    return new Promise(function (resolve, reject) {
+      if (!file || !/^image\//i.test(file.type || "")) { reject(new Error("not-image")); return; }
+      var objUrl = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        var w = Math.max(1, Math.round(img.naturalWidth * scale));
+        var h = Math.max(1, Math.round(img.naturalHeight * scale));
+        var c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(objUrl);
+        var dataUrl = c.toDataURL("image/jpeg", quality);
+        resolve({
+          data: dataUrl.split(",")[1], mime: "image/jpeg",
+          name: (file.name || "photo").replace(/\.[^.]+$/, "") + ".jpg", preview: dataUrl
+        });
+      };
+      img.onerror = function () { URL.revokeObjectURL(objUrl); reject(new Error("unreadable")); };
+      img.src = objUrl;
+    });
+  }
+
+  function afRenderPhoto() {
+    var box = $("afPhotoPreview");
+    var img = box.querySelector("img");
+    var src = afPhotoNew ? afPhotoNew.preview : safeUrl($("afImage").value.trim());
+    if (src) { img.src = src; box.hidden = false; }
+    else { img.removeAttribute("src"); box.hidden = true; }
+    $("afPhotoBtnLabel").textContent = src ? "Change photo" : "Choose photo";
+  }
+
+  function afRenderIngPhotos() {
+    var box = $("afIngPhotos");
+    box.innerHTML = afIngPhotos.map(function (p, i) {
+      return '<div class="af-thumb"><img src="' + esc(p.url || p.preview) + '" alt="Ingredient photo ' + (i + 1) + '" referrerpolicy="no-referrer">' +
+        '<button type="button" data-rm="' + i + '" aria-label="Remove ingredient photo ' + (i + 1) + '">' + icon("i-close") + "</button></div>";
+    }).join("");
+    box.hidden = !afIngPhotos.length;
+    $("afIngPhotoBtn").hidden = afIngPhotos.length >= AF_MAX_ING_PHOTOS;
+  }
+
+  function afWirePhotos() {
+    $("afPhotoPreview").querySelector("img").addEventListener("error", function () { $("afPhotoPreview").hidden = true; });
+
+    $("afPhotoFile").addEventListener("change", function () {
+      var input = this, f = input.files && input.files[0];
+      if (!f) return;
+      var perr = document.querySelector('#afForm .af-err[data-err="photo"]');
+      if (perr) perr.hidden = true;
+      afReadImage(f, 1400, 0.82).then(function (r) {
+        afPhotoNew = r; $("afImage").value = ""; afRenderPhoto();
+      }).catch(function () {
+        afSetError("photo", "That file couldn't be read as a picture. Try a JPG or PNG.", null);
+      }).then(function () { input.value = ""; });
+    });
+
+    $("afPhotoRemove").addEventListener("click", function () {
+      afPhotoNew = null; $("afImage").value = ""; afRenderPhoto();
+    });
+
+    // pasting a link replaces a photo chosen from the device
+    $("afImage").addEventListener("change", function () { afPhotoNew = null; afRenderPhoto(); });
+
+    $("afIngPhotoFile").addEventListener("change", function () {
+      var input = this, files = Array.prototype.slice.call(input.files || []);
+      var room = Math.max(0, AF_MAX_ING_PHOTOS - afIngPhotos.length);
+      var err = document.querySelector('#afForm .af-err[data-err="ingphotos"]');
+      if (err) err.hidden = true;
+      if (files.length > room) afSetError("ingphotos", "Only " + AF_MAX_ING_PHOTOS + " ingredient photos fit, so the extras were skipped.", null);
+      Promise.all(files.slice(0, room).map(function (f) {
+        return afReadImage(f, 1000, 0.8).catch(function () { return null; });
+      })).then(function (list) {
+        list.forEach(function (r) { if (r && afIngPhotos.length < AF_MAX_ING_PHOTOS) afIngPhotos.push(r); });
+        afRenderIngPhotos();
+        input.value = "";
+      });
+    });
+
+    $("afIngPhotos").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-rm]");
+      if (!b) return;
+      afIngPhotos.splice(parseInt(b.getAttribute("data-rm"), 10), 1);
+      afRenderIngPhotos();
+    });
+  }
+
   /* ---- submit ---- */
   function afBuildPayload() {
     var p = {
@@ -2301,6 +2585,14 @@
       "Directions": afSerializeSections($("afDirSections")),
       "Notes": $("afNotes").value.trim()
     };
+    p["Ingredient Pictures"] = afIngPhotos.filter(function (x) { return x.url; })
+      .map(function (x) { return x.url; }).join("\n");
+    var newIng = afIngPhotos.filter(function (x) { return !x.url; });
+    if (newIng.length) p.ingredientUploads = newIng.map(function (x) { return { name: x.name, mime: x.mime, data: x.data }; });
+    if (afPhotoNew) {
+      p.photoUpload = { name: afPhotoNew.name, mime: afPhotoNew.mime, data: afPhotoNew.data };
+      p["Pictures"] = "";
+    }
     if (afEditingRecipe) p.originalTitle = afEditingRecipe.title;
     return p;
   }
@@ -2315,6 +2607,7 @@
       notes: p.Notes || "",
       description: p.Description || "",
       picture: safeUrl(p.Pictures),
+      ingredientPictures: splitUrls(p["Ingredient Pictures"]),
       prepTime: p["Prep Time"] || "",
       cookTime: p["Cook Time"] || "",
       totalTime: p["Total Time"] || "",
@@ -2336,6 +2629,7 @@
     recipe.notes = p.Notes || "";
     recipe.description = p.Description || "";
     recipe.picture = safeUrl(p.Pictures);
+    recipe.ingredientPictures = splitUrls(p["Ingredient Pictures"]);
     recipe.prepTime = p["Prep Time"] || "";
     recipe.cookTime = p["Cook Time"] || "";
     recipe.totalTime = p["Total Time"] || "";
@@ -2357,6 +2651,8 @@
     $("afFormError").hidden = true;
 
     var payload = afBuildPayload();
+    var expectedUploads = (payload.photoUpload ? 1 : 0) + (payload.ingredientUploads ? payload.ingredientUploads.length : 0);
+    if (expectedUploads) label.textContent = "Uploading photos…";
 
     fetch(APPS_SCRIPT_URL, {
       method: "POST",
@@ -2377,6 +2673,10 @@
           throw new Error(data.message || "save-failed");
         }
         // success
+        // The script answers with the final saved photo links (uploads become Drive links).
+        var photoWarn = expectedUploads > 0 && !(Number(data.uploads) >= expectedUploads);
+        if (typeof data.pictures === "string") payload.Pictures = data.pictures;
+        if (typeof data.ingredientPictures === "string") payload["Ingredient Pictures"] = data.ingredientPictures;
         if (isEdit) {
           afLastSlug = afOptimisticUpdate(payload, afEditingRecipe);
           $("afSuccessHeading").textContent = "Recipe updated ✓";
@@ -2387,6 +2687,9 @@
           $("afSuccessHeading").textContent = "Recipe added ✓";
           $("afSuccessMsg").textContent = "“" + payload.Title + "” was saved to your Google Sheet. It's showing now — it may take a few minutes to appear for others as Google refreshes the published copy.";
           $("afSuccessAnother").hidden = false;
+        }
+        if (photoWarn) {
+          $("afSuccessMsg").textContent += " The photos were not uploaded, though: the Apps Script in your Google Sheet needs the latest update.";
         }
         afShowStage("success");
         $("afSuccess").scrollIntoView ? $("afBody").scrollTo(0, 0) : null;
@@ -2418,6 +2721,7 @@
 
   /* ---- one-time wiring of the form controls ---- */
   function afBuildOnce() {
+    afWirePhotos();
     $("afClose").addEventListener("click", afClose);
     $("afCancel").addEventListener("click", afClose);
     $("afAddIngSection").addEventListener("click", function () {
